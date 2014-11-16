@@ -16,39 +16,45 @@ USB_ClassInfo_HID_Device_t Joystick_HID_Interface = {
   },
 };
 
-#define JST_PORT	PORTB
-#define CLOCK_PIN	0
-#define LATCH_PIN	1
-#define DATA1_PIN	2
-#define DATA2_PIN	3
-#define DATA3_PIN	4
+#define IO_PORT	PORTD
+#define IO_DDR	PORTD
+#define IO_PIN	PIND
+
+#define DATA2_PIN	0
+#define DATA1_PIN	1
+#define DATA0_PIN	2
+#define LATCH_PIN	3
+#define CLOCK_PIN	4
+
+#define INPUT_PINS_MASK		(_BV(DATA0_PIN)|_BV(DATA1_PIN)|_BV(DATA2_PIN))
+#define OUTPUT_PINS_MASK	(_BV(CLOCK_PIN)|_BV(LATCH_PIN))
 
 inline void set_clock_high() {
-  JST_PORT |= _BV(CLOCK_PIN);
+  IO_PORT |= _BV(CLOCK_PIN);
 }
 
 inline void set_clock_low() {
-  JST_PORT &= ~(_BV(CLOCK_PIN));
+  IO_PORT &= ~(_BV(CLOCK_PIN));
 }
 
 inline void set_latch_high() {
-  JST_PORT |= _BV(LATCH_PIN);
+  IO_PORT |= _BV(LATCH_PIN);
 }
 
 inline void set_latch_low() {
-  JST_PORT &= ~(_BV(LATCH_PIN));
+  IO_PORT &= ~(_BV(LATCH_PIN));
+}
+
+inline bool is_data0_low() {
+  return !(IO_PIN & _BV(DATA0_PIN));
 }
 
 inline bool is_data1_low() {
-  return !(PINB & _BV(DATA1_PIN));
+  return !(IO_PIN & _BV(DATA1_PIN));
 }
 
 inline bool is_data2_low() {
-  return !(PINB & _BV(DATA2_PIN));
-}
-
-inline bool is_data3_low() {
-  return !(PINB & _BV(DATA3_PIN));
+  return !(IO_PIN & _BV(DATA2_PIN));
 }
 
 inline void toggle_clock() {
@@ -78,9 +84,9 @@ void SetupHardware(void) {
   
   /* Hardware Initialization */
   /* Port B pins for clock and latch are set to output */
-  DDRB = (_BV(CLOCK_PIN)|_BV(LATCH_PIN));
+  IO_DDR = OUTPUT_PINS_MASK;
   /* Set pull-up ressitors for inputs */
-  PORTB = (_BV(DATA1_PIN)|_BV(DATA2_PIN)|_BV(DATA3_PIN));
+  IO_PORT = INPUT_PINS_MASK;
   
   SerialDebug_init();
   USB_Init();
@@ -124,51 +130,51 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDIn
   set_latch_low();
   
   toggle_clock();
-  if (is_data1_low()) // B
+  if (is_data0_low()) // B
     JoystickReport->button.cross = 1;
   
   toggle_clock();
-  if (is_data1_low()) // Y
+  if (is_data0_low()) // Y
     JoystickReport->button.square =  1;
   
   toggle_clock();
-  if (is_data1_low()) // Select
+  if (is_data0_low()) // Select
     JoystickReport->button.select = 1;
   
   toggle_clock();
-  if (is_data1_low()) // Start
+  if (is_data0_low()) // Start
     JoystickReport->button.start = 1;
   
   toggle_clock();
-  if (is_data1_low()) // up
+  if (is_data0_low()) // up
     JoystickReport->Y = -127;
   
   toggle_clock();
-  if (is_data1_low()) // down
+  if (is_data0_low()) // down
     JoystickReport->Y = 127;
   
   toggle_clock();
-  if (is_data1_low()) // left
+  if (is_data0_low()) // left
     JoystickReport->X = -127;
   
   toggle_clock();
-  if (is_data1_low()) // right
+  if (is_data0_low()) // right
     JoystickReport->X = 127;
   
   toggle_clock();
-  if (is_data1_low()) // A
+  if (is_data0_low()) // A
     JoystickReport->button.circle = 1;
   
   toggle_clock();
-  if (is_data1_low()) // X
+  if (is_data0_low()) // X
     JoystickReport->button.triangle = 1;
   
   toggle_clock();
-  if (is_data1_low()) // L
+  if (is_data0_low()) // L
     JoystickReport->button.l1 = 1;
   
   toggle_clock();
-  if (is_data1_low()) // R
+  if (is_data0_low()) // R
     JoystickReport->button.r1 = 1;
   
   toggle_clock();
